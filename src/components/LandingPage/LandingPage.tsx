@@ -37,10 +37,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
               Start Building Now
               <ArrowRight className="btn-icon" />
             </button>
-            <button className="btn-secondary-lg">
+            <a 
+              href="https://github.com/Atifmoin19/Email-Template-Builder" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn-secondary-lg"
+            >
               <Github className="btn-icon" />
               View on GitHub
-            </button>
+            </a>
           </div>
         </motion.div>
         

@@ -7,7 +7,20 @@
 
 **EmailTemplateFlow** is a powerful, open-source drag-and-drop email builder designed to create production-ready, highly compatible HTML email templates without writing a single line of code.
 
-🚀 **[Try the Live Demo](https://Atifmoin19.github.io/Email-Template-Builder/)**
+🚀 **[Try the Live Demo](https://atifmoin19.github.io/Email-Template-Builder/)**
+
+---
+
+### 🎨 Visual Showcase
+
+#### 1. Landing Page
+![Landing Page](./src/assets/LandingPage.png)
+
+#### 2. Main Builder
+![Email Builder Interface](./src/assets/homepage.png)
+
+#### 3. Instant Preview
+![Email Preview Modal](./src/assets/PreviewModal.png)
 
 ---
 
