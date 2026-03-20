@@ -61,7 +61,6 @@ const EmailNodeWrapper: React.FC<EmailNodeWrapperProps> = ({
   };
 
   const activeBorderColor = 'primary.500';
-  const hoverBorderColor = 'primary.200';
   const dropIndicatorColor = 'primary.400';
   const dropBgColor = 'primary.50';
 
