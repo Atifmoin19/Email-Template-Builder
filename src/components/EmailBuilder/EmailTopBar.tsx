@@ -60,7 +60,7 @@ const EmailTopBar: React.FC<EmailTopBarProps> = ({
               letterSpacing="tight"
               color="gray.900"
             >
-              Email<Text as="span" color="primary.500">Flow</Text>
+              Email<Text as="span" color="primary.500">Template</Text>Flow
             </Text>
           </HStack>
           <Divider orientation="vertical" h="24px" mx={2} />

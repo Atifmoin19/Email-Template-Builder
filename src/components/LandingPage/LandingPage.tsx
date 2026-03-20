@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Zap, Shield, Layout, ArrowRight, Github } from 'lucide-react';
+import homepageImg from '../../assets/homepage.png';
+import previewModalImg from '../../assets/PreviewModal.png';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -13,11 +15,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       <nav className="landing-nav">
         <div className="nav-logo">
           <Mail className="logo-icon" />
-          <span>EmailFlow</span>
+          <span>EmailTemplate<span className="text-primary">Flow</span></span>
         </div>
         <div className="nav-links">
           <a href="#features">Features</a>
-          <a href="#templates">Templates</a>
           <button className="btn-primary-sm" onClick={onStart}>Launch Builder</button>
         </div>
       </nav>
@@ -29,8 +30,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1>Design <span className="text-gradient">Production-Ready</span> Emails in Minutes.</h1>
-          <p>The first open-source email builder that guarantees compatibility with Outlook, Gmail, and 50+ other clients. No coding required.</p>
+          <h1>The <span className="text-gradient">No-Code</span> Email HTML Builder.</h1>
+          <p>Design production-ready, highly compatible email templates in minutes without writing a single line of code. Export clean HTML ready for any ESP.</p>
           <div className="hero-actions">
             <button className="btn-primary-lg" onClick={onStart}>
               Start Building Now
@@ -49,19 +50,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 1 }}
         >
-          <div className="preview-window">
-             <div className="window-header">
-               <div className="dot"></div><div className="dot"></div><div className="dot"></div>
-             </div>
-             <img src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&q=80&w=1200" alt="App Preview" />
+          <div className="preview-container">
+            <div className="preview-window main-window">
+               <div className="window-header">
+                 <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+               </div>
+               <img src={homepageImg} alt="EmailTemplateFlow Builder" />
+            </div>
+            <motion.div 
+              className="preview-window overlay-window"
+              initial={{ x: 50, y: 50, opacity: 0 }}
+              animate={{ x: 0, y: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.8 }}
+            >
+               <div className="window-header">
+                 <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+               </div>
+               <img src={previewModalImg} alt="Email Preview" />
+            </motion.div>
           </div>
         </motion.div>
       </header>
 
       <section id="features" className="features-section">
         <div className="section-header">
-          <h2>Why choose EmailFlow?</h2>
-          <p>Everything you need to ship confident, beautiful emails.</p>
+          <h2>Why choose EmailTemplateFlow?</h2>
+          <p>Everything you need to ship confident, beautiful emails with zero code.</p>
         </div>
         <div className="features-grid">
           <div className="feature-card">
@@ -89,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </section>
 
       <footer className="landing-footer">
-        <p>&copy; 2024 EmailFlow. Built for developers and designers.</p>
+        <p>&copy; 2024 EmailTemplateFlow. The world's easiest no-code email builder.</p>
       </footer>
     </div>
   );

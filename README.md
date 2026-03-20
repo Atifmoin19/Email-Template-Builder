@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+# 📧 EmailTemplateFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**The world's easiest No-Code Email HTML Template Builder.**
 
-Currently, two official plugins are available:
+[![Deploy to GitHub Pages](https://github.com/Atifmoin19/Email-Template-Builder/actions/workflows/deploy.yml/badge.svg)](https://Atifmoin19.github.io/Email-Template-Builder/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**EmailTemplateFlow** is a powerful, open-source drag-and-drop email builder designed to create production-ready, highly compatible HTML email templates without writing a single line of code.
 
-## React Compiler
+🚀 **[Try the Live Demo](https://Atifmoin19.github.io/Email-Template-Builder/)**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## ✨ Key Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 🏗️ **No-Code Drag & Drop**: Effortlessly build complex layouts with our intuitive visual editor.
+- 📱 **Mobile Responsive**: Built-in responsive design ensures your emails look great on any device.
+- 🛡️ **Outlook & Gmail Ready**: Automatically generates complex MSO and table-based code for maximum compatibility.
+- 🔄 **Undo/Redo Support**: Experiment with confidence thanks to full history management.
+- 🖼️ **Asset Management**: Real-time image editing and placeholder support.
+- 💾 **Export Options**: 
+  - **Copy Code**: Instant access to the generated HTML.
+  - **Download .HTML**: Get a ready-to-use file for your ESP (Mailchimp, Klaviyo, SendGrid, etc.).
+- ♻️ **Reset Template**: Start fresh with a single click.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Frontend**: [React 19](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Chakra UI](https://chakra-ui.com/) (Premium custom theme)
+- **Drag & Drop**: [@dnd-kit](https://dndkit.com/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Getting Started
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Atifmoin19/Email-Template-Builder.git
+   cd Email-Template-Builder
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 🌎 Deployment
+
+The project is configured for easy deployment to **GitHub Pages**.
+
+1. Update the `homepage` field in `package.json` with your URL.
+2. Run the deployment script:
+   ```bash
+   npm run deploy
+   ```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Developed with ❤️ by [Atif Moin](https://github.com/Atifmoin19)
