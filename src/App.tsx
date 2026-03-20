@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import { LandingPage } from './components/LandingPage/LandingPage'
 import EmailBuilder from './components/EmailBuilder/EmailBuilder'
 import './App.css'
@@ -24,7 +24,7 @@ function AppContent() {
 
 function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router>
       <AppContent />
     </Router>
   )
