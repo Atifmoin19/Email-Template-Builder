@@ -79,11 +79,19 @@
    npm run build
    ```
 
+5. **Run the tests and linter:**
+   ```bash
+   npm test
+   npm run lint
+   ```
+
 ---
 
 ## 🌎 Deployment
 
-The project is configured for easy deployment to **GitHub Pages**.
+The project deploys to **GitHub Pages** through `.github/workflows/deploy.yml`: every push and pull request runs lint, tests and a build, and pushes to `main` deploy `dist/`. This needs the repository's Pages source set to **GitHub Actions** (Settings > Pages).
+
+Manual deployment via the `gh-pages` branch still works:
 
 1. Update the `homepage` field in `package.json` with your URL.
 2. Run the deployment script:
