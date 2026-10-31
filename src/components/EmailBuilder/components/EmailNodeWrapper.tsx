@@ -8,7 +8,7 @@ import {
 import { Trash2, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useDragState } from '../context/DragStateContext';
+import { useDragState } from '../context/useDragState';
 
 interface EmailNodeWrapperProps {
   id: string;

@@ -3,7 +3,7 @@ import { Box, SimpleGrid, GridItem, Text } from '@chakra-ui/react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { EmailNode } from '../types';
-import { useDragState } from '../context/DragStateContext';
+import { useDragState } from '../context/useDragState';
 
 interface HeaderProps {
   node: EmailNode;
@@ -96,7 +96,7 @@ const Header: React.FC<HeaderProps> = ({ node, children }) => {
         >
           {renderedChildren.length === 0 ? (
             <GridItem colSpan={gridColumns}>
-              <Box w="full" border="1px dashed" borderColor="gray.200" p={4} textAlign="center" color="gray.400" fontSize="xs" fontWeight="700">
+              <Box w="full" border="1px dashed" borderColor="gray.200" p={4} textAlign="center" color="gray.600" fontSize="xs" fontWeight="700">
                 HEADER CONTENT AREA
               </Box>
             </GridItem>

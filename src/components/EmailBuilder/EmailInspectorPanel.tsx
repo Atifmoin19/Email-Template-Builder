@@ -24,12 +24,12 @@ import {
   AlignCenter, 
   AlignRight,
 } from 'lucide-react';
-import type { EmailNode, EmailSettings } from './types';
+import type { EmailNode, EmailNodeProps, EmailSettings } from './types';
 import { findNodeById, updateNodeInTree } from './utils/astHelpers';
 
 interface EmailInspectorPanelProps {
   nodes: EmailNode[];
-  setNodes: (nodes: EmailNode[]) => void;
+  setNodes: (nodes: EmailNode[], coalesceKey?: string) => void;
   settings: EmailSettings;
   onUpdateSettings: (settings: Partial<EmailSettings>) => void;
   selectedNodeId: string | null;
@@ -49,19 +49,20 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
 
   const selectedNode = selectedNodeId ? findNodeById(nodes, selectedNodeId) : null;
 
-  const updateNodeProps = (props: Record<string, any>) => {
+  const updateNodeProps = (props: Partial<EmailNodeProps>) => {
     if (!selectedNodeId) return;
     const newNodes = updateNodeInTree(nodes, selectedNodeId, (node) => ({
       ...node,
       props: { ...node.props, ...props },
     }));
-    setNodes(newNodes);
+    // Repeated edits to the same field of the same node become one undo step.
+    setNodes(newNodes, `props:${selectedNodeId}:${Object.keys(props).sort().join(',')}`);
   };
 
   const renderTextSettings = () => (
     <VStack spacing={4} alignItems="stretch">
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">CONTENT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">CONTENT</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.content || ''} 
@@ -74,7 +75,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         />
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">TEXT PRESET</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">TEXT PRESET</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.variant || 'paragraph'}
@@ -82,7 +83,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           borderColor="gray.300"
           onChange={(e) => {
             const variant = e.target.value;
-            let updates: any = { variant };
+            let updates: Partial<EmailNodeProps> = { variant };
             if (variant === 'heading') {
               updates = { ...updates, fontSize: '32px', fontWeight: '800' };
             } else if (variant === 'subheader') {
@@ -100,7 +101,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
       <HStack>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">FONT SIZE</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">FONT SIZE</FormLabel>
           <Input 
             size="sm" 
             value={selectedNode?.props.fontSize ?? ''} 
@@ -113,7 +114,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           />
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">TEXT COLOR</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">TEXT COLOR</FormLabel>
           <Input 
             size="sm" 
             type="color"
@@ -124,7 +125,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         </FormControl>
       </HStack>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">FONT WEIGHT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">FONT WEIGHT</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.fontWeight ?? 'normal'}
@@ -140,7 +141,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         </Select>
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">ALIGNMENT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">ALIGNMENT</FormLabel>
         <HStack spacing={2}>
           <IconButton 
             aria-label="Align Left" 
@@ -177,7 +178,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
   const renderImageSettings = () => (
     <VStack spacing={4} alignItems="stretch">
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">IMAGE URL</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">IMAGE URL</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.src || ''} 
@@ -190,7 +191,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         />
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">ALT TEXT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">ALT TEXT</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.alt || ''} 
@@ -204,7 +205,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
       <HStack>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">WIDTH (%)</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">WIDTH (%)</FormLabel>
           <Input 
             size="sm" 
             value={selectedNode?.props.width ?? ''} 
@@ -215,7 +216,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           />
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">HEIGHT (PX)</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">HEIGHT (PX)</FormLabel>
           <Input 
             size="sm" 
             value={selectedNode?.props.height ?? ''} 
@@ -229,13 +230,13 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         </FormControl>
       </HStack>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">OBJECT FIT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">OBJECT FIT</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.objectFit ?? 'contain'}
           color="gray.800"
           borderColor="gray.300"
-          onChange={(e) => updateNodeProps({ objectFit: e.target.value })}
+          onChange={(e) => updateNodeProps({ objectFit: e.target.value as EmailNodeProps['objectFit'] })}
         >
           <option value="contain">Contain</option>
           <option value="cover">Cover</option>
@@ -250,7 +251,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
   const renderButtonSettings = () => (
     <VStack spacing={4} alignItems="stretch">
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">BUTTON TEXT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">BUTTON TEXT</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.content ?? ''} 
@@ -261,7 +262,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         />
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">LINK URL</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">LINK URL</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.href || ''} 
@@ -275,7 +276,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
       <HStack>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">BG COLOR</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">BG COLOR</FormLabel>
           <Input 
             size="sm" 
             type="color"
@@ -285,7 +286,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           />
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="xs" fontWeight="800" color="gray.500">TEXT COLOR</FormLabel>
+          <FormLabel fontSize="xs" fontWeight="800" color="gray.600">TEXT COLOR</FormLabel>
           <Input 
             size="sm" 
             type="color"
@@ -296,7 +297,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         </FormControl>
       </HStack>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">ALIGNMENT</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">ALIGNMENT</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.align ?? 'center'}
@@ -315,7 +316,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
   const renderColumnSettings = () => (
     <VStack spacing={4} alignItems="stretch">
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">COLUMN SPAN</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">COLUMN SPAN</FormLabel>
         <Input 
           size="sm" 
           type="number"
@@ -329,7 +330,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         />
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">WIDTH (%)</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">WIDTH (%)</FormLabel>
         <Input 
           size="sm" 
           value={selectedNode?.props.width || '100%'} 
@@ -347,7 +348,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
   const renderSectionSettings = () => (
     <VStack spacing={4} alignItems="stretch">
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">GRID COLUMNS</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">GRID COLUMNS</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.gridColumns || 1}
@@ -362,7 +363,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         </Select>
       </FormControl>
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">LAYOUT TYPE</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">LAYOUT TYPE</FormLabel>
         <Select 
           size="sm"
           value={selectedNode?.props.layout || 'full-width'}
@@ -384,7 +385,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </Heading>
       
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">PAGE BACKGROUND</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">PAGE BACKGROUND</FormLabel>
         <Input 
           size="sm" 
           type="color"
@@ -395,7 +396,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
 
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">CONTENT BACKGROUND</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">CONTENT BACKGROUND</FormLabel>
         <Input 
           size="sm" 
           type="color"
@@ -406,7 +407,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
 
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">FONT FAMILY</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">FONT FAMILY</FormLabel>
         <Select 
           size="sm"
           value={settings.fontFamily}
@@ -423,7 +424,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
 
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">MAX WIDTH (PX)</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">MAX WIDTH (PX)</FormLabel>
         <Input 
           size="sm" 
           value={settings.maxWidth} 
@@ -435,7 +436,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       </FormControl>
       
       <FormControl>
-        <FormLabel fontSize="xs" fontWeight="800" color="gray.500">INNER PADDING</FormLabel>
+        <FormLabel fontSize="xs" fontWeight="800" color="gray.600">INNER PADDING</FormLabel>
         <Input 
           size="sm" 
           value={settings.globalPadding} 
@@ -460,7 +461,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
         <AccordionPanel pb={4} px={0}>
           <VStack spacing={4} alignItems="stretch">
             <FormControl>
-              <FormLabel fontSize="xs" fontWeight="800" color="gray.500">BACKGROUND COLOR</FormLabel>
+              <FormLabel fontSize="xs" fontWeight="800" color="gray.600">BACKGROUND COLOR</FormLabel>
               <Input 
                 size="sm" 
                 type="color"
@@ -470,10 +471,10 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
               />
             </FormControl>
 
-            <Heading size="xs" mt={2} fontWeight="800" color="gray.400">PADDING</Heading>
+            <Heading size="xs" mt={2} fontWeight="800" color="gray.600">PADDING</Heading>
             <HStack spacing={2}>
               <FormControl>
-                <FormLabel fontSize="xs" fontWeight="800" color="gray.500">TOP</FormLabel>
+                <FormLabel fontSize="xs" fontWeight="800" color="gray.600">TOP</FormLabel>
                 <Input 
                   size="sm" 
                   value={selectedNode?.props.paddingTop ?? ''} 
@@ -486,7 +487,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
                 />
               </FormControl>
               <FormControl>
-                <FormLabel fontSize="xs" fontWeight="800" color="gray.500">BOTTOM</FormLabel>
+                <FormLabel fontSize="xs" fontWeight="800" color="gray.600">BOTTOM</FormLabel>
                 <Input 
                   size="sm" 
                   value={selectedNode?.props.paddingBottom ?? ''} 
@@ -501,7 +502,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
             </HStack>
             <HStack spacing={2}>
               <FormControl>
-                <FormLabel fontSize="xs" fontWeight="800" color="gray.500">LEFT</FormLabel>
+                <FormLabel fontSize="xs" fontWeight="800" color="gray.600">LEFT</FormLabel>
                 <Input 
                   size="sm" 
                   value={selectedNode?.props.paddingLeft ?? ''} 
@@ -514,7 +515,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
                 />
               </FormControl>
               <FormControl>
-                <FormLabel fontSize="xs" fontWeight="800" color="gray.500">RIGHT</FormLabel>
+                <FormLabel fontSize="xs" fontWeight="800" color="gray.600">RIGHT</FormLabel>
                 <Input 
                   size="sm" 
                   value={selectedNode?.props.paddingRight ?? ''} 
@@ -536,7 +537,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
   return (
     <VStack h="full" bg={bgColor} spacing={0} alignItems="stretch" borderLeft="1px" borderColor={borderColor}>
       <Box p={4} borderBottom="1px" borderColor={borderColor}>
-        <Heading size="xs" textTransform="uppercase" letterSpacing="widest" color="gray.400" fontWeight="900">
+        <Heading size="xs" textTransform="uppercase" letterSpacing="widest" color="gray.600" fontWeight="900">
           INSPECTOR
         </Heading>
       </Box>
@@ -551,7 +552,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
                 <Heading size="xs" textTransform="uppercase" letterSpacing="widest" color="primary.600" fontWeight="900">
                   {selectedNode.type}
                 </Heading>
-                <Text fontSize="10px" color="gray.400" fontWeight="700">ID: {selectedNode.id}</Text>
+                <Text fontSize="10px" color="gray.600" fontWeight="700">ID: {selectedNode.id}</Text>
               </VStack>
               <IconButton
                 aria-label="Delete"

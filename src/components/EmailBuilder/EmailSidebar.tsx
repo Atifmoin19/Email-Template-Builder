@@ -18,13 +18,14 @@ import {
   PanelTop,
   PanelBottom,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import type { EmailNodeType } from './types';
 
 interface SidebarItemProps {
   type: EmailNodeType;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   isSelected?: boolean;
 }
 
@@ -98,13 +99,13 @@ const EmailSidebar: React.FC<EmailSidebarProps> = ({ selectedType }) => {
   return (
     <VStack h="full" spacing={0} alignItems="stretch" bg="white">
       <Box p={4} borderBottom="1px" borderColor={borderColor}>
-        <Heading size="xs" fontWeight="900" letterSpacing="widest" color="gray.400">
+        <Heading size="xs" fontWeight="900" letterSpacing="widest" color="gray.600">
           COMPONENTS
         </Heading>
       </Box>
 
       <VStack p={4} spacing={3} alignItems="stretch" flex={1} overflowY="auto">
-        <Text fontSize="10px" fontWeight="900" color="gray.400" letterSpacing="widest" mb={1}>
+        <Text fontSize="10px" fontWeight="900" color="gray.600" letterSpacing="widest" mb={1}>
           DRAG & DROP
         </Text>
         {components.map((comp) => (

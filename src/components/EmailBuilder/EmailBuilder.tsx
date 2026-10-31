@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Flex, HStack, VStack, Icon, Text } from "@chakra-ui/react";
 import { Type, ImageIcon, Layout } from "lucide-react";
 import {
@@ -23,17 +23,23 @@ import { useEmailHistory } from "./hooks/useEmailHistory";
 import EmailCanvas from "./EmailCanvas";
 import EmailInspectorPanel from "./EmailInspectorPanel";
 import EmailPreviewModal from "./EmailPreviewModal";
-import type { EmailNode, EmailNodeType } from "./types";
+import type { EmailNode, EmailNodeType, EmailSettings } from "./types";
 import { generateEmailHtml } from "./utils/emailRenderer";
+import { applyDrop } from "./utils/applyDrop";
 import {
   findNodeById,
   findParentNode,
-  updateNodeInTree,
   removeNodeById,
 } from "./utils/astHelpers";
-import { DragStateProvider, useDragState } from "./context/DragStateContext";
+import { DragStateProvider } from "./context/DragStateContext";
+import { useDragState } from "./context/useDragState";
+import type { Placement } from "./context/dragStateTypes";
 
-import { templates } from "./presets";
+import { emptyProject, instantiatePreset, templates, type TemplateId } from "./presets";
+import { clearDraft, loadDraft } from "./utils/draftStorage";
+import { useAutosave } from "./hooks/useAutosave";
+import ConfirmDialog, { type ConfirmRequest } from "./ConfirmDialog";
+import type { EmailProject } from "./types";
 import EmailSidebar from "./EmailSidebar";
 import EmailTopBar from "./EmailTopBar";
 
@@ -42,18 +48,50 @@ interface EmailBuilderProps {
 }
 
 const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
-  const { project, setProject, resetProject, undo, redo, canUndo, canRedo } = useEmailHistory(
-    templates.OTP.project,
+  // Restore the autosaved draft once on mount; otherwise start from the OTP preset.
+  const [restoredDraft] = useState(() => loadDraft());
+  const [initialProject] = useState(() => restoredDraft ?? instantiatePreset(templates.OTP.project));
+  const { project, setProject, resetProject, undo, redo, canUndo, canRedo } = useEmailHistory(initialProject);
+  const { status: saveStatus, markSaved } = useAutosave(project, restoredDraft);
+  // The project as last loaded from a preset or "New template". Anything else
+  // (including a restored draft) counts as unsaved edits worth confirming.
+  const [pristineProject, setPristineProject] = useState<EmailProject | null>(
+    restoredDraft ? null : initialProject,
   );
+  const hasEdits = project !== pristineProject && project.nodes.length > 0;
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
   const { nodes, settings } = project;
 
-  const setNodes = (newNodes: EmailNode[]) => {
-    setProject({ ...project, nodes: newNodes });
+  const setNodes = (newNodes: EmailNode[], coalesceKey?: string) => {
+    setProject({ ...project, nodes: newNodes }, coalesceKey);
   };
 
-  const setSettings = (newSettings: any) => {
-    setProject({ ...project, settings: { ...settings, ...newSettings } });
+  const setSettings = (newSettings: Partial<EmailSettings>) => {
+    setProject(
+      { ...project, settings: { ...settings, ...newSettings } },
+      `settings:${Object.keys(newSettings).sort().join(",")}`,
+    );
   };
+
+  // Cmd/Ctrl+Z to undo, Shift+Cmd/Ctrl+Z or Ctrl+Y to redo. Left alone while
+  // typing in a field so the browser's native text undo still works there.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -112,7 +150,7 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
     );
 
     let effectiveOverId = overId;
-    let effectivePlacement: any = "inside";
+    let effectivePlacement: Placement = "inside";
 
     if (activeRect && overRect) {
       if (overType === "section" && activeType === "column") {
@@ -242,115 +280,14 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
       activeNode = found;
     }
 
-    const isActiveRootLevel = ["section", "header", "footer"].includes(
-      activeNode.type,
-    );
-    const newNodesWithoutActive = isNew
-      ? nodes
-      : removeNodeById(nodes, activeId);
-
-    // 1. Drop on canvas-root (append to end)
-    if (overId === "canvas-root") {
-      if (isActiveRootLevel) {
-        setNodes([...newNodesWithoutActive, activeNode]);
-      } else if (newNodesWithoutActive.length > 0) {
-        const lastRoot =
-          newNodesWithoutActive[newNodesWithoutActive.length - 1];
-        setNodes(
-          updateNodeInTree(newNodesWithoutActive, lastRoot.id, (node) => ({
-            ...node,
-            children: [...(node.children || []), activeNode],
-          })),
-        );
-      } else {
-        const newSection: EmailNode = {
-          id: `section-${nanoid(6)}`,
-          type: "section",
-          props: {
-            padding: "20px",
-            backgroundColor: "#ffffff",
-            gridColumns: 1,
-          },
-          children: [activeNode],
-        };
-        setNodes([newSection]);
-      }
-      return;
-    }
-
-    const overNode = findNodeById(newNodesWithoutActive, overId);
-    if (!overNode) return;
-
-    const overParent = findParentNode(newNodesWithoutActive, overId);
-
-    // 2. Sibling Placement (top, bottom, left, right)
-    const isSiblingPlacement =
-      finalPlacement === "top" ||
-      finalPlacement === "bottom" ||
-      finalPlacement === "left" ||
-      finalPlacement === "right";
-
-    if (isSiblingPlacement) {
-      if (overParent) {
-        // Nested sibling move
-        setNodes(
-          updateNodeInTree(newNodesWithoutActive, overParent.id, (node) => {
-            const index =
-              node.children?.findIndex((c) => c.id === overId) ?? -1;
-            const newChildren = [...(node.children || [])];
-            const insertIndex =
-              finalPlacement === "top" || finalPlacement === "left"
-                ? index
-                : index + 1;
-            newChildren.splice(insertIndex, 0, activeNode);
-            return { ...node, children: newChildren };
-          }),
-        );
-      } else {
-        // Root-level sibling move
-        if (isActiveRootLevel) {
-          const index = newNodesWithoutActive.findIndex((n) => n.id === overId);
-          if (index !== -1) {
-            const newNodes = [...newNodesWithoutActive];
-            const insertIndex =
-              finalPlacement === "top" || finalPlacement === "left"
-                ? index
-                : index + 1;
-            newNodes.splice(insertIndex, 0, activeNode);
-            setNodes(newNodes);
-          }
-        } else {
-          // Content element tried to be root sibling - force into the target section
-          setNodes(
-            updateNodeInTree(newNodesWithoutActive, overId, (node) => ({
-              ...node,
-              children:
-                finalPlacement === "top"
-                  ? [activeNode, ...(node.children || [])]
-                  : [...(node.children || []), activeNode],
-            })),
-          );
-        }
-      }
-      return;
-    }
-
-    // 3. Container Placement (inside)
-    const isContainer =
-      overNode.type === "section" ||
-      overNode.type === "column" ||
-      overNode.type === "header" ||
-      overNode.type === "footer";
-    if (isContainer) {
-      if (activeNode.type === "section" && overNode.type === "section") return; // No nesting sections
-
-      setNodes(
-        updateNodeInTree(newNodesWithoutActive, overId, (node) => ({
-          ...node,
-          children: [...(node.children || []), activeNode],
-        })),
-      );
-    }
+    const next = applyDrop({
+      nodes,
+      activeNode,
+      isNew,
+      overId,
+      placement: finalPlacement,
+    });
+    if (next) setNodes(next);
   };
 
   const handleNodeSelect = (id: string | null) => {
@@ -375,11 +312,38 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleReset = () => {
-    if (window.confirm("Are you sure you want to reset the template? ALL your changes and history will be lost.")) {
-      resetProject(templates.OTP.project);
+  const startNewTemplate = () => {
+    const fresh = emptyProject();
+    clearDraft();
+    resetProject(fresh);
+    markSaved(fresh);
+    setPristineProject(fresh);
+    setSelectedNodeId(null);
+  };
+
+  const handleNewTemplate = () => {
+    setConfirmRequest({
+      title: "Start a new template?",
+      body: "This clears the canvas, your saved draft and the undo history. It cannot be undone.",
+      confirmLabel: "Start new",
+      onConfirm: startNewTemplate,
+    });
+  };
+
+  const handleApplyTemplate = (id: TemplateId) => {
+    const apply = () => {
+      const next = instantiatePreset(templates[id].project);
+      setProject(next); // a normal history step, so Undo brings the old document back
+      setPristineProject(next);
       setSelectedNodeId(null);
-    }
+    };
+    if (!hasEdits) return apply();
+    setConfirmRequest({
+      title: `Replace with "${templates[id].name}"?`,
+      body: "Your current design will be replaced. You can get it back with Undo.",
+      confirmLabel: "Replace",
+      onConfirm: apply,
+    });
   };
 
   return (
@@ -397,7 +361,9 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
            onExit={() => onNavigate?.('landing')}
            onPreview={onPreviewOpen}
            onDownload={handleDownload}
-           onReset={handleReset}
+           onNewTemplate={handleNewTemplate}
+           onApplyTemplate={handleApplyTemplate}
+           saveStatus={saveStatus}
            undo={undo}
            redo={redo}
            canUndo={canUndo}
@@ -430,6 +396,7 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
           </Box>
         </Flex>
 
+        <ConfirmDialog request={confirmRequest} onClose={() => setConfirmRequest(null)} />
         <EmailPreviewModal
           isOpen={isPreviewOpen}
           onClose={onPreviewClose}

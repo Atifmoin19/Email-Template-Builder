@@ -3,7 +3,7 @@ import { Box, VStack, Text, SimpleGrid, GridItem } from '@chakra-ui/react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { EmailNode } from '../types';
-import { useDragState } from '../context/DragStateContext';
+import { useDragState } from '../context/useDragState';
 
 interface SectionProps {
   node: EmailNode;
@@ -94,7 +94,7 @@ const Section: React.FC<SectionProps> = ({ node, children }) => {
         >
           {renderedChildren.length === 0 ? (
             <GridItem colSpan={gridColumns}>
-              <Box w="full" border="1px dashed" borderColor="gray.200" p={8} textAlign="center" color="gray.400" fontSize="xs" fontWeight="700">
+              <Box w="full" border="1px dashed" borderColor="gray.200" p={8} textAlign="center" color="gray.600" fontSize="xs" fontWeight="700">
                 DROP CONTENT HERE
               </Box>
             </GridItem>
