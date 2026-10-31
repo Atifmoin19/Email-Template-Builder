@@ -23,8 +23,10 @@ import {
   Mail,
   Copy,
   Download as DownloadIcon,
+  CheckCircle2,
 } from "lucide-react";
 import { generateEmailHtml } from "./utils/emailRenderer";
+import { validateCompatibility } from "./utils/emailCompatibility";
 import type { EmailProject } from "./types";
 
 interface EmailPreviewModalProps {
@@ -43,6 +45,7 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const [mode, setMode] = useState<PreviewMode>("desktop");
   const toast = useToast();
   const html = generateEmailHtml(project);
+  const warnings = validateCompatibility(project.nodes);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(html);
@@ -61,7 +64,7 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${project.settings.maxWidth || "email"}-template.html`;
+    link.download = "email-template.html";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -205,20 +208,31 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                  <VStack align="stretch" spacing={6}>
                     <Box>
                       <Text fontSize="xs" fontWeight="900" color="gray.400" letterSpacing="widest" mb={4}>
-                        COMPATIBILITY STATUS (AI)
+                        COMPATIBILITY CHECKS
                       </Text>
                       <VStack align="stretch" spacing={3}>
-                        <Box p={4} bg="orange.50" rounded="xl" border="1px solid" borderColor="orange.200">
-                           <HStack spacing={3} mb={2}>
-                             <Icon as={AlertTriangle} color="orange.500" />
-                             <Text fontWeight="900" color="orange.800" fontSize="xs">
-                               OUTLOOK COMPATIBILITY
-                             </Text>
-                           </HStack>
-                           <Text fontSize="xs" color="orange.700" lineHeight="tall" fontWeight="600">
-                             Some images are missing Alt text. Outlook and Gmail may flag this as spam.
-                           </Text>
-                        </Box>
+                        {warnings.length === 0 ? (
+                          <HStack p={4} bg="green.50" rounded="xl" border="1px solid" borderColor="green.200" spacing={3}>
+                            <Icon as={CheckCircle2} color="green.500" />
+                            <Text fontSize="xs" color="green.800" fontWeight="700">
+                              No issues found by the built-in checks.
+                            </Text>
+                          </HStack>
+                        ) : (
+                          warnings.map((w, i) => (
+                            <Box key={`${w.id}-${i}`} p={4} bg="orange.50" rounded="xl" border="1px solid" borderColor="orange.200">
+                              <HStack spacing={3} mb={2}>
+                                <Icon as={AlertTriangle} color="orange.500" />
+                                <Text fontWeight="900" color="orange.800" fontSize="xs" textTransform="uppercase">
+                                  {w.id.split("-")[0]}
+                                </Text>
+                              </HStack>
+                              <Text fontSize="xs" color="orange.700" lineHeight="tall" fontWeight="600">
+                                {w.message}
+                              </Text>
+                            </Box>
+                          ))
+                        )}
                       </VStack>
                     </Box>
 

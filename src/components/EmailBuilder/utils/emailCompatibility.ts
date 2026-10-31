@@ -6,36 +6,32 @@ export interface CompatibilityWarning {
   message: string;
 }
 
+/**
+ * Static checks for common deliverability / client-rendering pitfalls.
+ * These are heuristics, not a rendering test in real clients.
+ */
 export const validateCompatibility = (nodes: EmailNode[]): CompatibilityWarning[] => {
   const warnings: CompatibilityWarning[] = [];
+  const warn = (id: string, message: string) => warnings.push({ id, type: 'warning', message });
 
   const traverse = (node: EmailNode) => {
-    // Check for images without alt text
-    if (node.type === 'image' && !node.props.alt) {
-      warnings.push({
-        id: node.id,
-        type: 'warning',
-        message: 'Image is missing alt text. This is bad for accessibility and spam filters.'
-      });
+    if (node.type === 'image') {
+      if (!node.props.src) {
+        warn(node.id, 'Image has no source URL and will render as a broken image.');
+      }
+      if (!node.props.alt) {
+        warn(node.id, 'Image is missing alt text. Many clients block images by default, and spam filters penalise it.');
+      }
+      if (node.props.width && /px$|^\d+$/.test(node.props.width) && parseInt(node.props.width, 10) > 600) {
+        warn(node.id, 'Image width exceeds 600px. This may cause horizontal scrolling in some clients.');
+      }
     }
 
-    // Check for large images
-    if (node.type === 'image' && node.props.width && parseInt(node.props.width) > 600) {
-      warnings.push({
-        id: node.id,
-        type: 'warning',
-        message: 'Image width exceeds 600px. This may cause horizontal scrolling in some clients.'
-      });
+    if (node.type === 'button' && (!node.props.href || node.props.href === '#')) {
+      warn(node.id, 'Button has no link URL.');
     }
 
-    // Check for background images (Outlook pitfall)
-    if (node.props.backgroundColor && node.props.backgroundColor.length > 7) {
-       // Just a placeholder for complex checks if needed
-    }
-
-    if (node.children) {
-      node.children.forEach(traverse);
-    }
+    node.children?.forEach(traverse);
   };
 
   nodes.forEach(traverse);
