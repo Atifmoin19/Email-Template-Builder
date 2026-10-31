@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# macOS archive junk
+__MACOSX
+*.zip
+
+# Test coverage
+coverage
