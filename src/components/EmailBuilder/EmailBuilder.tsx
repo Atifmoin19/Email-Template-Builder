@@ -25,10 +25,10 @@ import EmailInspectorPanel from "./EmailInspectorPanel";
 import EmailPreviewModal from "./EmailPreviewModal";
 import type { EmailNode, EmailNodeType, EmailSettings } from "./types";
 import { generateEmailHtml } from "./utils/emailRenderer";
+import { applyDrop } from "./utils/applyDrop";
 import {
   findNodeById,
   findParentNode,
-  updateNodeInTree,
   removeNodeById,
 } from "./utils/astHelpers";
 import { DragStateProvider } from "./context/DragStateContext";
@@ -267,115 +267,14 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
       activeNode = found;
     }
 
-    const isActiveRootLevel = ["section", "header", "footer"].includes(
-      activeNode.type,
-    );
-    const newNodesWithoutActive = isNew
-      ? nodes
-      : removeNodeById(nodes, activeId);
-
-    // 1. Drop on canvas-root (append to end)
-    if (overId === "canvas-root") {
-      if (isActiveRootLevel) {
-        setNodes([...newNodesWithoutActive, activeNode]);
-      } else if (newNodesWithoutActive.length > 0) {
-        const lastRoot =
-          newNodesWithoutActive[newNodesWithoutActive.length - 1];
-        setNodes(
-          updateNodeInTree(newNodesWithoutActive, lastRoot.id, (node) => ({
-            ...node,
-            children: [...(node.children || []), activeNode],
-          })),
-        );
-      } else {
-        const newSection: EmailNode = {
-          id: `section-${nanoid(6)}`,
-          type: "section",
-          props: {
-            padding: "20px",
-            backgroundColor: "#ffffff",
-            gridColumns: 1,
-          },
-          children: [activeNode],
-        };
-        setNodes([newSection]);
-      }
-      return;
-    }
-
-    const overNode = findNodeById(newNodesWithoutActive, overId);
-    if (!overNode) return;
-
-    const overParent = findParentNode(newNodesWithoutActive, overId);
-
-    // 2. Sibling Placement (top, bottom, left, right)
-    const isSiblingPlacement =
-      finalPlacement === "top" ||
-      finalPlacement === "bottom" ||
-      finalPlacement === "left" ||
-      finalPlacement === "right";
-
-    if (isSiblingPlacement) {
-      if (overParent) {
-        // Nested sibling move
-        setNodes(
-          updateNodeInTree(newNodesWithoutActive, overParent.id, (node) => {
-            const index =
-              node.children?.findIndex((c) => c.id === overId) ?? -1;
-            const newChildren = [...(node.children || [])];
-            const insertIndex =
-              finalPlacement === "top" || finalPlacement === "left"
-                ? index
-                : index + 1;
-            newChildren.splice(insertIndex, 0, activeNode);
-            return { ...node, children: newChildren };
-          }),
-        );
-      } else {
-        // Root-level sibling move
-        if (isActiveRootLevel) {
-          const index = newNodesWithoutActive.findIndex((n) => n.id === overId);
-          if (index !== -1) {
-            const newNodes = [...newNodesWithoutActive];
-            const insertIndex =
-              finalPlacement === "top" || finalPlacement === "left"
-                ? index
-                : index + 1;
-            newNodes.splice(insertIndex, 0, activeNode);
-            setNodes(newNodes);
-          }
-        } else {
-          // Content element tried to be root sibling - force into the target section
-          setNodes(
-            updateNodeInTree(newNodesWithoutActive, overId, (node) => ({
-              ...node,
-              children:
-                finalPlacement === "top"
-                  ? [activeNode, ...(node.children || [])]
-                  : [...(node.children || []), activeNode],
-            })),
-          );
-        }
-      }
-      return;
-    }
-
-    // 3. Container Placement (inside)
-    const isContainer =
-      overNode.type === "section" ||
-      overNode.type === "column" ||
-      overNode.type === "header" ||
-      overNode.type === "footer";
-    if (isContainer) {
-      if (activeNode.type === "section" && overNode.type === "section") return; // No nesting sections
-
-      setNodes(
-        updateNodeInTree(newNodesWithoutActive, overId, (node) => ({
-          ...node,
-          children: [...(node.children || []), activeNode],
-        })),
-      );
-    }
+    const next = applyDrop({
+      nodes,
+      activeNode,
+      isNew,
+      overId,
+      placement: finalPlacement,
+    });
+    if (next) setNodes(next);
   };
 
   const handleNodeSelect = (id: string | null) => {
