@@ -107,7 +107,7 @@ const EmailTopBar: React.FC<EmailTopBarProps> = ({
             variant="ghost"
             leftIcon={<Icon as={LogOut} fontSize="16px" />}
             onClick={onExit}
-            color="gray.500"
+            color="gray.600"
             fontWeight="700"
             rounded="xl"
             _hover={{ bg: "red.50", color: "red.600" }}

@@ -135,7 +135,7 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                      <Text fontSize="md" fontWeight="900" letterSpacing="tight" color="gray.900">
                        Preview <Text as="span" color="primary.500">Mode</Text>
                      </Text>
-                     <Text fontSize="10px" color="gray.400" fontWeight="700">
+                     <Text fontSize="10px" color="gray.600" fontWeight="700">
                        SIMULATED PRODUCTION VIEW
                      </Text>
                    </VStack>
@@ -207,7 +207,7 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
               >
                  <VStack align="stretch" spacing={6}>
                     <Box>
-                      <Text fontSize="xs" fontWeight="900" color="gray.400" letterSpacing="widest" mb={4}>
+                      <Text fontSize="xs" fontWeight="900" color="gray.600" letterSpacing="widest" mb={4}>
                         COMPATIBILITY CHECKS
                       </Text>
                       <VStack align="stretch" spacing={3}>
@@ -237,7 +237,7 @@ const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
                     </Box>
 
                     <Box>
-                      <Text fontSize="xs" fontWeight="900" color="gray.400" letterSpacing="widest" mb={4}>
+                      <Text fontSize="xs" fontWeight="900" color="gray.600" letterSpacing="widest" mb={4}>
                         EXPORT OPTIONS
                       </Text>
                       <VStack spacing={2}>

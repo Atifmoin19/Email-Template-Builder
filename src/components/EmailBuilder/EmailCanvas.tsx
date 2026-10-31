@@ -38,7 +38,7 @@ const EmailCanvas: React.FC<EmailCanvasProps> = ({
       <HStack w="full" justify="space-between" mb={4}>
         <HStack spacing={2} color="gray.500">
           <Icon as={MousePointer2} fontSize="14px" />
-          <Text color="gray.400" fontSize="10px" fontWeight="900" letterSpacing="widest">
+          <Text color="gray.600" fontSize="10px" fontWeight="900" letterSpacing="widest">
             CANVAS WORKSPACE (A4)
           </Text>
         </HStack>
@@ -72,7 +72,7 @@ const EmailCanvas: React.FC<EmailCanvasProps> = ({
                   <Text fontWeight="900" fontSize="lg" color="gray.800">
                     Your canvas is empty
                   </Text>
-                  <Text color="gray.500" fontSize="sm">
+                  <Text color="gray.600" fontSize="sm">
                     Drag components from the left sidebar to start building your email.
                   </Text>
                 </VStack>
