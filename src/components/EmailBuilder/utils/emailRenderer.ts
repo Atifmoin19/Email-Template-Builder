@@ -1,11 +1,44 @@
-import type { EmailNode, EmailProject } from '../types';
+import type { EmailNode, EmailProject, EmailSettings } from '../types';
 import { objectToInlineCss } from './inlineCss';
+
+const DEFAULT_FONT = 'Helvetica, Arial, sans-serif';
+const DEFAULT_MAX_WIDTH = '600px';
+
+/**
+ * Escape a value for safe use in HTML text or a double-quoted attribute.
+ * Editor fields are plain text (the canvas renders them literally), so the
+ * export must do the same or a stray "<" or "&" corrupts the email.
+ */
+export const escapeHtml = (value: unknown): string =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+/**
+ * Outlook reads the HTML width/height attributes, not CSS, and expects bare
+ * pixel numbers (or a percentage for width). "auto" or "300px" is invalid.
+ */
+const toHtmlDimension = (value: unknown, allowPercent: boolean): string | null => {
+  const v = String(value ?? '').trim();
+  const px = v.match(/^(\d+(?:\.\d+)?)(px)?$/);
+  if (px) return String(Math.round(Number(px[1])));
+  if (allowPercent && /^\d+(\.\d+)?%$/.test(v)) return v;
+  return null;
+};
 
 /**
  * Helper to render a grid-based table for containers
  */
-const renderGrid = (node: EmailNode, maxWidth: string = '600px', extraStyles: Record<string, string> = {}): string => {
+const renderGrid = (
+  node: EmailNode,
+  settings: Partial<EmailSettings> | undefined,
+  extraStyles: Record<string, string> = {},
+): string => {
   const { props, children, type } = node;
+  const maxWidth = settings?.maxWidth || DEFAULT_MAX_WIDTH;
   const gridCols = props.gridColumns || 1;
   const rows: string[][] = [];
   let currentRow: string[] = [];
@@ -13,19 +46,19 @@ const renderGrid = (node: EmailNode, maxWidth: string = '600px', extraStyles: Re
 
   children?.forEach(child => {
     const colSpan = Math.min(child.props.colSpan || 1, gridCols);
-    
+
     if (currentCols + colSpan > gridCols && currentRow.length > 0) {
       rows.push(currentRow);
       currentRow = [];
       currentCols = 0;
     }
 
-    const childHtml = renderNode(child);
+    const childHtml = renderNode(child, settings);
     const colWidth = `${(colSpan / gridCols) * 100}%`;
     const padding = (child.type === 'column' || child.type === 'section') ? '0' : '10px';
-    
+
     currentRow.push(`
-      <td width="${colWidth}" colspan="${colSpan}" valign="top" style="width: ${colWidth}; padding: ${padding};">
+      <td width="${colWidth}" colspan="${colSpan}" valign="top" class="column-cell" style="width: ${colWidth}; padding: ${padding};">
         ${childHtml}
       </td>
     `);
@@ -39,7 +72,7 @@ const renderGrid = (node: EmailNode, maxWidth: string = '600px', extraStyles: Re
   const gridHtml = rows.map(row => `<tr>${row.join('')}</tr>`).join('');
 
   const containerStyle = objectToInlineCss({
-    backgroundColor: props.backgroundColor || (type === 'section' ? 'transparent' : (type === 'header' || type === 'footer' ? '#ffffff' : 'transparent')),
+    backgroundColor: props.backgroundColor || (type === 'header' || type === 'footer' ? '#ffffff' : 'transparent'),
     padding: props.padding || (type === 'section' ? '0' : (type === 'header' ? '20px' : '30px 20px')),
     width: '100%',
     ...extraStyles
@@ -59,42 +92,47 @@ const renderGrid = (node: EmailNode, maxWidth: string = '600px', extraStyles: Re
 };
 
 /**
- * Renders a single node to HTML
+ * Renders a single node to HTML. `settings` is threaded through every level
+ * so global options (font, max width) reach deeply nested content.
  */
-const renderNode = (node: EmailNode, settings?: any): string => {
+const renderNode = (node: EmailNode, settings?: Partial<EmailSettings>): string => {
   const { type, props, children } = node;
-  const maxWidth = settings?.maxWidth || '600px';
+  const globalFont = settings?.fontFamily || DEFAULT_FONT;
 
   switch (type) {
     case 'section':
-      return renderGrid(node, maxWidth);
+      return renderGrid(node, settings);
 
     case 'header':
-      return renderGrid(node, maxWidth, { borderBottom: '1px solid #eeeeee' });
+      return renderGrid(node, settings, { borderBottom: '1px solid #eeeeee' });
 
     case 'footer':
-      return renderGrid(node, maxWidth, { borderTop: '1px solid #eeeeee' });
+      return renderGrid(node, settings, { borderTop: '1px solid #eeeeee' });
 
-    case 'column':
+    case 'column': {
       const colContent = children ? children.map(c => renderNode(c, settings)).join('') : '';
       return `
         <div style="padding: 10px;">
           ${colContent}
         </div>
       `;
+    }
 
-    case 'text':
+    case 'text': {
       const textStyle = objectToInlineCss({
-        fontFamily: settings?.fontFamily || props.fontFamily || 'Helvetica, Arial, sans-serif',
+        fontFamily: props.fontFamily || globalFont,
         fontSize: props.fontSize || '16px',
+        fontWeight: props.fontWeight,
         color: props.color || '#333333',
         lineHeight: props.lineHeight || '1.5',
+        letterSpacing: props.letterSpacing,
         textAlign: props.textAlign || 'left',
         padding: '10px 0',
       });
-      return `<div style="${textStyle}">${props.content || ''}</div>`;
+      return `<div style="${textStyle}">${escapeHtml(props.content)}</div>`;
+    }
 
-    case 'image':
+    case 'image': {
       const imgStyle = objectToInlineCss({
         display: 'block',
         width: props.width || '100%',
@@ -103,13 +141,17 @@ const renderNode = (node: EmailNode, settings?: any): string => {
         objectFit: props.objectFit || 'contain',
         border: '0',
       });
+      const widthAttr = toHtmlDimension(props.width || '100%', true);
+      const heightAttr = toHtmlDimension(props.height, false);
+      const dims = `${widthAttr ? ` width="${widthAttr}"` : ''}${heightAttr ? ` height="${heightAttr}"` : ''}`;
       return `
-        <div align="${props.align || 'center'}" style="padding: 10px 0;">
-          <img src="${props.src || ''}" alt="${props.alt || ''}" width="${props.width || '100%'}" height="${props.height || 'auto'}" class="responsive-image" style="${imgStyle}" />
+        <div align="${escapeHtml(props.align || 'center')}" style="padding: 10px 0;">
+          <img src="${escapeHtml(props.src)}" alt="${escapeHtml(props.alt)}"${dims} class="responsive-image" style="${imgStyle}" />
         </div>
       `;
+    }
 
-    case 'button':
+    case 'button': {
       const btnTableStyle = objectToInlineCss({
         backgroundColor: props.backgroundColor || '#3182ce',
         borderRadius: props.borderRadius || '5px',
@@ -122,19 +164,20 @@ const renderNode = (node: EmailNode, settings?: any): string => {
         textDecoration: 'none',
         fontSize: props.fontSize || '16px',
         fontWeight: 'bold',
-        fontFamily: settings?.fontFamily || 'Helvetica, Arial, sans-serif',
+        fontFamily: globalFont,
       });
       return `
-        <div align="${props.align || 'center'}" style="margin: 10px 0;">
+        <div align="${escapeHtml(props.align || 'center')}" style="margin: 10px 0;">
           <table border="0" cellpadding="0" cellspacing="0" style="${btnTableStyle}">
             <tr>
               <td align="center">
-                <a href="${props.href || '#'}" target="_blank" style="${btnLinkStyle}">${props.content || 'Button'}</a>
+                <a href="${escapeHtml(props.href || '#')}" target="_blank" style="${btnLinkStyle}">${escapeHtml(props.content || 'Button')}</a>
               </td>
             </tr>
           </table>
         </div>
       `;
+    }
 
     case 'divider':
       return `
