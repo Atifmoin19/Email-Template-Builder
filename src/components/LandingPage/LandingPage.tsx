@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Zap, Shield, Layout, ArrowRight, Github } from 'lucide-react';
-import homepageImg from '../../assets/homepage.png';
-import previewModalImg from '../../assets/PreviewModal.png';
+import homepageImg from '../../assets/homepage.webp';
+import previewModalImg from '../../assets/PreviewModal.webp';
 import './LandingPage.css';
 
 interface LandingPageProps {
@@ -94,8 +94,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <div className="feature-icon-wrapper">
               <Shield className="feature-icon" />
             </div>
-            <h3>Outlook Safe</h3>
-            <p>Automatically generates the complex MSO code required for Outlook compatibility.</p>
+            <h3>Table-Based Output</h3>
+            <p>Exports table-based HTML with inline styles and an Outlook-specific border fix, the layout approach email clients handle best.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon-wrapper">
