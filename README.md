@@ -33,7 +33,9 @@
 - 💾 **Export Options**: 
   - **Copy Code**: Instant access to the generated HTML.
   - **Download .HTML**: Get a ready-to-use file for your ESP (Mailchimp, Klaviyo, SendGrid, etc.).
-- ♻️ **Reset Template**: Start fresh with a single click.
+- 💾 **Autosave**: Your current design is saved to this browser (localStorage) and restored when you reopen the builder.
+- 🧩 **Starter templates**: OTP, Newsletter, Welcome, Order receipt and Password reset presets. Applying one is undoable.
+- ♻️ **New template**: Start from a blank canvas (asks for confirmation first).
 
 ---
 

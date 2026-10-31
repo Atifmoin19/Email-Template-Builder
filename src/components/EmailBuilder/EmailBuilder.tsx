@@ -35,7 +35,11 @@ import { DragStateProvider } from "./context/DragStateContext";
 import { useDragState } from "./context/useDragState";
 import type { Placement } from "./context/dragStateTypes";
 
-import { templates } from "./presets";
+import { emptyProject, instantiatePreset, templates, type TemplateId } from "./presets";
+import { clearDraft, loadDraft } from "./utils/draftStorage";
+import { useAutosave } from "./hooks/useAutosave";
+import ConfirmDialog, { type ConfirmRequest } from "./ConfirmDialog";
+import type { EmailProject } from "./types";
 import EmailSidebar from "./EmailSidebar";
 import EmailTopBar from "./EmailTopBar";
 
@@ -44,9 +48,18 @@ interface EmailBuilderProps {
 }
 
 const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
-  const { project, setProject, resetProject, undo, redo, canUndo, canRedo } = useEmailHistory(
-    templates.OTP.project,
+  // Restore the autosaved draft once on mount; otherwise start from the OTP preset.
+  const [restoredDraft] = useState(() => loadDraft());
+  const [initialProject] = useState(() => restoredDraft ?? instantiatePreset(templates.OTP.project));
+  const { project, setProject, resetProject, undo, redo, canUndo, canRedo } = useEmailHistory(initialProject);
+  const { status: saveStatus, markSaved } = useAutosave(project, restoredDraft);
+  // The project as last loaded from a preset or "New template". Anything else
+  // (including a restored draft) counts as unsaved edits worth confirming.
+  const [pristineProject, setPristineProject] = useState<EmailProject | null>(
+    restoredDraft ? null : initialProject,
   );
+  const hasEdits = project !== pristineProject && project.nodes.length > 0;
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(null);
   const { nodes, settings } = project;
 
   const setNodes = (newNodes: EmailNode[], coalesceKey?: string) => {
@@ -299,11 +312,38 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleReset = () => {
-    if (window.confirm("Are you sure you want to reset the template? ALL your changes and history will be lost.")) {
-      resetProject(templates.OTP.project);
+  const startNewTemplate = () => {
+    const fresh = emptyProject();
+    clearDraft();
+    resetProject(fresh);
+    markSaved(fresh);
+    setPristineProject(fresh);
+    setSelectedNodeId(null);
+  };
+
+  const handleNewTemplate = () => {
+    setConfirmRequest({
+      title: "Start a new template?",
+      body: "This clears the canvas, your saved draft and the undo history. It cannot be undone.",
+      confirmLabel: "Start new",
+      onConfirm: startNewTemplate,
+    });
+  };
+
+  const handleApplyTemplate = (id: TemplateId) => {
+    const apply = () => {
+      const next = instantiatePreset(templates[id].project);
+      setProject(next); // a normal history step, so Undo brings the old document back
+      setPristineProject(next);
       setSelectedNodeId(null);
-    }
+    };
+    if (!hasEdits) return apply();
+    setConfirmRequest({
+      title: `Replace with "${templates[id].name}"?`,
+      body: "Your current design will be replaced. You can get it back with Undo.",
+      confirmLabel: "Replace",
+      onConfirm: apply,
+    });
   };
 
   return (
@@ -321,7 +361,9 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
            onExit={() => onNavigate?.('landing')}
            onPreview={onPreviewOpen}
            onDownload={handleDownload}
-           onReset={handleReset}
+           onNewTemplate={handleNewTemplate}
+           onApplyTemplate={handleApplyTemplate}
+           saveStatus={saveStatus}
            undo={undo}
            redo={redo}
            canUndo={canUndo}
@@ -354,6 +396,7 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
           </Box>
         </Flex>
 
+        <ConfirmDialog request={confirmRequest} onClose={() => setConfirmRequest(null)} />
         <EmailPreviewModal
           isOpen={isPreviewOpen}
           onClose={onPreviewClose}

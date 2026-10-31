@@ -7,14 +7,28 @@ import {
   Icon,
   Text,
   Divider,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
-import { Mail, Eye, LogOut, Download, RefreshCw } from "lucide-react";
+import { Mail, Eye, LogOut, Download, FilePlus, LayoutTemplate, ChevronDown } from "lucide-react";
+import { templates, type TemplateId } from "./presets";
+import type { SaveStatus } from "./hooks/useAutosave";
+
+const SAVE_LABEL: Record<SaveStatus, { text: string; color: string }> = {
+  saved: { text: "Saved", color: "green.700" },
+  saving: { text: "Saving…", color: "gray.600" },
+  error: { text: "Not saved (storage unavailable)", color: "red.600" },
+};
 
 interface EmailTopBarProps {
   onExit: () => void;
   onPreview: () => void;
   onDownload: () => void;
-  onReset: () => void;
+  onNewTemplate: () => void;
+  onApplyTemplate: (id: TemplateId) => void;
+  saveStatus: SaveStatus;
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
@@ -25,7 +39,9 @@ const EmailTopBar: React.FC<EmailTopBarProps> = ({
   onExit,
   onPreview,
   onDownload,
-  onReset,
+  onNewTemplate,
+  onApplyTemplate,
+  saveStatus,
   canUndo,
   canRedo,
   undo,
@@ -87,18 +103,55 @@ const EmailTopBar: React.FC<EmailTopBarProps> = ({
              >Redo</Button>
           </HStack>
           <Divider orientation="vertical" h="24px" mx={2} />
+          <Menu placement="bottom-start">
+            <MenuButton
+              as={Button}
+              size="sm"
+              variant="ghost"
+              leftIcon={<Icon as={LayoutTemplate} fontSize="14px" />}
+              rightIcon={<Icon as={ChevronDown} fontSize="14px" />}
+              color="gray.700"
+              fontWeight="700"
+              rounded="xl"
+            >
+              Templates
+            </MenuButton>
+            <MenuList zIndex={200} py={2} minW="300px">
+              {(Object.keys(templates) as TemplateId[]).map((id) => (
+                <MenuItem key={id} onClick={() => onApplyTemplate(id)} py={2}>
+                  <Box>
+                    <Text fontSize="sm" fontWeight="700" color="gray.800">
+                      {templates[id].name}
+                    </Text>
+                    <Text fontSize="xs" color="gray.600">
+                      {templates[id].description}
+                    </Text>
+                  </Box>
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
           <Button
             size="sm"
             variant="ghost"
-            leftIcon={<Icon as={RefreshCw} fontSize="14px" />}
-            onClick={onReset}
-            color="red.500"
+            leftIcon={<Icon as={FilePlus} fontSize="14px" />}
+            onClick={onNewTemplate}
+            color="gray.700"
             fontWeight="700"
             rounded="xl"
-            _hover={{ bg: "red.50" }}
           >
-            Reset Template
+            New template
           </Button>
+          <Text
+            fontSize="xs"
+            fontWeight="700"
+            color={SAVE_LABEL[saveStatus].color}
+            role="status"
+            aria-live="polite"
+            minW="60px"
+          >
+            {SAVE_LABEL[saveStatus].text}
+          </Text>
         </HStack>
 
         <HStack spacing={4}>
