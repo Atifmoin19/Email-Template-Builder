@@ -3,7 +3,7 @@ import { Box, SimpleGrid, GridItem, Text } from '@chakra-ui/react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import type { EmailNode } from '../types';
-import { useDragState } from '../context/DragStateContext';
+import { useDragState } from '../context/useDragState';
 
 interface HeaderProps {
   node: EmailNode;

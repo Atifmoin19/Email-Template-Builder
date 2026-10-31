@@ -23,7 +23,7 @@ import { useEmailHistory } from "./hooks/useEmailHistory";
 import EmailCanvas from "./EmailCanvas";
 import EmailInspectorPanel from "./EmailInspectorPanel";
 import EmailPreviewModal from "./EmailPreviewModal";
-import type { EmailNode, EmailNodeType } from "./types";
+import type { EmailNode, EmailNodeType, EmailSettings } from "./types";
 import { generateEmailHtml } from "./utils/emailRenderer";
 import {
   findNodeById,
@@ -31,7 +31,9 @@ import {
   updateNodeInTree,
   removeNodeById,
 } from "./utils/astHelpers";
-import { DragStateProvider, useDragState } from "./context/DragStateContext";
+import { DragStateProvider } from "./context/DragStateContext";
+import { useDragState } from "./context/useDragState";
+import type { Placement } from "./context/dragStateTypes";
 
 import { templates } from "./presets";
 import EmailSidebar from "./EmailSidebar";
@@ -51,7 +53,7 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
     setProject({ ...project, nodes: newNodes });
   };
 
-  const setSettings = (newSettings: any) => {
+  const setSettings = (newSettings: Partial<EmailSettings>) => {
     setProject({ ...project, settings: { ...settings, ...newSettings } });
   };
 
@@ -112,7 +114,7 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
     );
 
     let effectiveOverId = overId;
-    let effectivePlacement: any = "inside";
+    let effectivePlacement: Placement = "inside";
 
     if (activeRect && overRect) {
       if (overType === "section" && activeType === "column") {

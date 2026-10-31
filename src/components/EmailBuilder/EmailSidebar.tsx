@@ -18,13 +18,14 @@ import {
   PanelTop,
   PanelBottom,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 import type { EmailNodeType } from './types';
 
 interface SidebarItemProps {
   type: EmailNodeType;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   isSelected?: boolean;
 }
 

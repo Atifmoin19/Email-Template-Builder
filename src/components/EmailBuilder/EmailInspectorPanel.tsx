@@ -24,7 +24,7 @@ import {
   AlignCenter, 
   AlignRight,
 } from 'lucide-react';
-import type { EmailNode, EmailSettings } from './types';
+import type { EmailNode, EmailNodeProps, EmailSettings } from './types';
 import { findNodeById, updateNodeInTree } from './utils/astHelpers';
 
 interface EmailInspectorPanelProps {
@@ -49,7 +49,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
 
   const selectedNode = selectedNodeId ? findNodeById(nodes, selectedNodeId) : null;
 
-  const updateNodeProps = (props: Record<string, any>) => {
+  const updateNodeProps = (props: Partial<EmailNodeProps>) => {
     if (!selectedNodeId) return;
     const newNodes = updateNodeInTree(nodes, selectedNodeId, (node) => ({
       ...node,
@@ -82,7 +82,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           borderColor="gray.300"
           onChange={(e) => {
             const variant = e.target.value;
-            let updates: any = { variant };
+            let updates: Partial<EmailNodeProps> = { variant };
             if (variant === 'heading') {
               updates = { ...updates, fontSize: '32px', fontWeight: '800' };
             } else if (variant === 'subheader') {
@@ -235,7 +235,7 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
           value={selectedNode?.props.objectFit ?? 'contain'}
           color="gray.800"
           borderColor="gray.300"
-          onChange={(e) => updateNodeProps({ objectFit: e.target.value })}
+          onChange={(e) => updateNodeProps({ objectFit: e.target.value as EmailNodeProps['objectFit'] })}
         >
           <option value="contain">Contain</option>
           <option value="cover">Cover</option>

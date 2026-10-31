@@ -18,7 +18,9 @@ interface EmailNodeRendererProps {
   onDelete: (id: string) => void;
 }
 
-const componentMap: Record<string, any> = {
+type NodeComponent = React.ComponentType<{ node: EmailNode; children?: React.ReactNode }>;
+
+const componentMap: Record<EmailNode['type'], NodeComponent> = {
   section: Section,
   column: Column,
   text: Text,

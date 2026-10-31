@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, VStack, Text } from '@chakra-ui/react';
 import { useDroppable } from '@dnd-kit/core';
 import type { EmailNode } from '../types';
-import { useDragState } from '../context/DragStateContext';
+import { useDragState } from '../context/useDragState';
 
 interface ColumnProps {
   node: EmailNode;
