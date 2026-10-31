@@ -3,7 +3,6 @@
 **The world's easiest No-Code Email HTML Template Builder.**
 
 [![Deploy to GitHub Pages](https://github.com/Atifmoin19/Email-Template-Builder/actions/workflows/deploy.yml/badge.svg)](https://Atifmoin19.github.io/Email-Template-Builder/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **EmailTemplateFlow** is a powerful, open-source drag-and-drop email builder designed to create production-ready, highly compatible HTML email templates without writing a single line of code.
 
@@ -17,10 +16,10 @@
 ![Landing Page](./src/assets/LandingPage.png)
 
 #### 2. Main Builder
-![Email Builder Interface](./src/assets/homepage.png)
+![Email Builder Interface](./src/assets/homepage.webp)
 
 #### 3. Instant Preview
-![Email Preview Modal](./src/assets/PreviewModal.png)
+![Email Preview Modal](./src/assets/PreviewModal.webp)
 
 ---
 
@@ -28,7 +27,7 @@
 
 - 🏗️ **No-Code Drag & Drop**: Effortlessly build complex layouts with our intuitive visual editor.
 - 📱 **Mobile Responsive**: Built-in responsive design ensures your emails look great on any device.
-- 🛡️ **Outlook & Gmail Ready**: Automatically generates complex MSO and table-based code for maximum compatibility.
+- 🛡️ **Email-client friendly output**: Exports table-based layout with inline styles, plus an Outlook-only (`<!--[if mso]>`) `border-collapse` fix. Not yet included: VML ("bulletproof") buttons or MSO ghost tables for multi-column layouts, so test complex designs in Outlook desktop before sending.
 - 🔄 **Undo/Redo Support**: Experiment with confidence thanks to full history management.
 - 🖼️ **Asset Management**: Real-time image editing and placeholder support.
 - 💾 **Export Options**: 
@@ -103,6 +102,6 @@ Manual deployment via the `gh-pages` branch still works:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+License: not specified yet.
 
 Developed with ❤️ by [Atif Moin](https://github.com/Atifmoin19)
