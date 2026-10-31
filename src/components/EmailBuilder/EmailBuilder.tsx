@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Flex, HStack, VStack, Icon, Text } from "@chakra-ui/react";
 import { Type, ImageIcon, Layout } from "lucide-react";
 import {
@@ -49,13 +49,36 @@ const EmailBuilderInner: React.FC<EmailBuilderProps> = ({ onNavigate }) => {
   );
   const { nodes, settings } = project;
 
-  const setNodes = (newNodes: EmailNode[]) => {
-    setProject({ ...project, nodes: newNodes });
+  const setNodes = (newNodes: EmailNode[], coalesceKey?: string) => {
+    setProject({ ...project, nodes: newNodes }, coalesceKey);
   };
 
   const setSettings = (newSettings: Partial<EmailSettings>) => {
-    setProject({ ...project, settings: { ...settings, ...newSettings } });
+    setProject(
+      { ...project, settings: { ...settings, ...newSettings } },
+      `settings:${Object.keys(newSettings).sort().join(",")}`,
+    );
   };
+
+  // Cmd/Ctrl+Z to undo, Shift+Cmd/Ctrl+Z or Ctrl+Y to redo. Left alone while
+  // typing in a field so the browser's native text undo still works there.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);

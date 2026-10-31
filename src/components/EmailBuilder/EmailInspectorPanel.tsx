@@ -29,7 +29,7 @@ import { findNodeById, updateNodeInTree } from './utils/astHelpers';
 
 interface EmailInspectorPanelProps {
   nodes: EmailNode[];
-  setNodes: (nodes: EmailNode[]) => void;
+  setNodes: (nodes: EmailNode[], coalesceKey?: string) => void;
   settings: EmailSettings;
   onUpdateSettings: (settings: Partial<EmailSettings>) => void;
   selectedNodeId: string | null;
@@ -55,7 +55,8 @@ const EmailInspectorPanel: React.FC<EmailInspectorPanelProps> = ({
       ...node,
       props: { ...node.props, ...props },
     }));
-    setNodes(newNodes);
+    // Repeated edits to the same field of the same node become one undo step.
+    setNodes(newNodes, `props:${selectedNodeId}:${Object.keys(props).sort().join(',')}`);
   };
 
   const renderTextSettings = () => (
